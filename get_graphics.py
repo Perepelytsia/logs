@@ -6,7 +6,7 @@ settings = importlib.import_module('config')
 con = pymysql.connect(user='admin', password='admin', db='logs')
 with con:
 	cur = con.cursor()
-	for table in ['error_nginx', 'slow_php', 'error_yii2']:
+	for table in ['error_nginx', 'slow_php', 'error_yii2', 'error_php']:
 		for project in settings.PROJECTS:
 			cur.execute("SELECT min(day), max(day) FROM "+project+"_"+table)
 			row = cur.fetchone()

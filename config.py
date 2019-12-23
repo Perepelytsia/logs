@@ -1,1 +1,1 @@
-PROJECTS = ['config']
+PROJECTS = ['o', 's']
