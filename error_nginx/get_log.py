@@ -1,9 +1,9 @@
-from nginx_error_log import parse_lines, parse_lines_merge_multiple
 import pymysql
 import sys
 import os
 import datetime
 import importlib
+import re
 
 if len(sys.argv) == 3:
 	project = sys.argv[1]
@@ -16,13 +16,33 @@ if len(sys.argv) == 3:
 	con = pymysql.connect(user='admin', password='admin', db='logs')
 	with con:
 		cur = con.cursor()
-		sql = "DELETE FROM "+project+"_error_nginx WHERE day=%s"
-		cur.execute(sql, (day))
 		with open(settings.PATH, 'r') as reader:
-			for log in parse_lines(reader):
-				sql = "INSERT INTO "+project+"_error_nginx (`level`, `msg`, `day`) VALUES (%s, %s, %s)"
-				lvl = str(log.level)
-				cur.execute(sql, (lvl.replace('Level.', ''), log.message, day))
+
+			lines     = reader.readlines()
+			step = 0
+			for line in lines:
+				data = []
+				day = re.match(r'\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}', line)
+				if day:
+					groupDay  = day.group()
+					formatDay = groupDay[0:10]
+					formatDay = formatDay.replace('/', '-')
+					data.append(formatDay)
+
+					index4LvlBefore = 2 + day.end()
+					index4LvlAfter = 5 + index4LvlBefore
+					data.append(line[index4LvlBefore:index4LvlAfter])
+
+					pid = re.search(r'\*\d{1,30}', line)
+					if pid:
+						index4MsgBefore = pid.end()
+						index4MsgAfter = len(line)
+						data.append(line[index4MsgBefore:index4MsgAfter])
+						sql = "INSERT INTO "+project+"_error_nginx (`level`, `msg`, `day`) VALUES (%s, %s, %s)"
+						cur.execute(sql, (data[1], data[2], data[0]))
+					#print(step)
+					step += 1
+
 		reader.close()
 	con.close()
 else:

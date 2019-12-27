@@ -10,7 +10,8 @@ if len(sys.argv) == 3:
 	project = sys.argv[1]
 	date    = sys.argv[2]
 	dt = datetime.datetime(int(date[:4]), int(date[4:6]), int(date[6:]))
-	day = dt.strftime("%Y-%m-%d")
+	newDt = dt - datetime.timedelta(days=1)
+	day = newDt.strftime("%Y-%m-%d")
 	settings = importlib.import_module(project)
 	if settings.SCP_CHUNK and settings.PATH:
 
@@ -45,8 +46,6 @@ if len(sys.argv) == 3:
 		with con:
 
 			cur = con.cursor()
-			sql = "DELETE FROM "+project+"_slow_php WHERE day=%s"
-			cur.execute(sql, (day))
 
 			for strHash, value in data.items():
 				cnt = value['cnt']
